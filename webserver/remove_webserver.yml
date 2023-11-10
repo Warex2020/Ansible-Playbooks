@@ -1,0 +1,7 @@
+- hosts: webserver
+  become: yes
+  tasks:
+    - name: Stop the Docker container
+      community.docker.docker_container:
+        name: my_webserver
+        state: absent

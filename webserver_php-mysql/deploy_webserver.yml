@@ -1,0 +1,120 @@
+- hosts: webserver
+  become: yes
+  gather_facts: no
+  vars:
+    projectname: "meinProjekt"
+    webport: "8013"
+    phpmyadminport: "8014"
+    mysql_root_password: rootPasswort
+    mysql_database: meineDatenbank
+    mysql_user: meinBenutzer
+    mysql_password: meinPasswort
+  #vars_prompt:
+  #  - name: projectname
+  #    prompt: "Enter Project Name"
+  #    private: no
+
+  #  - name: webport
+  #    prompt: "Enter Web Port"
+  #    private: no
+
+  #  - name: mysql_root_password
+  #    prompt: "Enter MySQL root password"
+  #    private: yes
+
+  #  - name: mysql_database
+  #    prompt: "Enter MySQL database name"
+  #    private: no
+
+  #  - name: mysql_user
+  #    prompt: "Enter MySQL user"
+  #    private: no
+
+  #  - name: mysql_password
+  #    prompt: "Enter MySQL user password"
+  #    private: yes
+
+  tasks:
+    - name: Ensure pip is installed
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+
+    - name: Install jsondiff using pip
+      ansible.builtin.pip:
+        name: jsondiff
+        state: present
+
+    - name: Create a custom network
+      community.docker.docker_network:
+        name: "{{ projectname }}_intern_network"
+        driver: bridge
+        internal: true
+
+    - name: Debug MySQL environment variables
+      debug:
+        msg:
+          - "MYSQL_ROOT_PASSWORD: {{ mysql_root_password }}"
+          - "MYSQL_DATABASE: {{ mysql_database }}"
+          - "MYSQL_USER: {{ mysql_user }}"
+          - "MYSQL_PASSWORD: {{ mysql_password }}"
+
+    - name: Start MySQL Docker container
+      community.docker.docker_container:
+        name: "{{ projectname }}_mysql_container"
+        image: mysql:latest
+        recreate: true
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+          MYSQL_DATABASE: "{{ mysql_database }}"
+          MYSQL_USER: "{{ mysql_user }}"
+          MYSQL_PASSWORD: "{{ mysql_password }}"
+       # volumes:
+       #   - "/deploy/webserver/{{ projectname }}/mysql:/var/lib/mysql"
+        network_mode: "{{ projectname }}_intern_network"
+
+    - name: Start PHP-FPM Docker container
+      community.docker.docker_container:
+        name: "{{ projectname }}_php_fpm_container"
+        image: php:fpm
+        volumes:
+          - /deploy/webserver/{{ projectname }}/php:/var/www/html
+        network_mode: "{{ projectname }}_intern_network"
+
+    - name: Start NGINX Docker container
+      community.docker.docker_container:
+        name: "{{ projectname }}_nginx_container"
+        image: nginx:latest
+        ports:
+          - "{{ webport }}:80"
+        volumes:
+          - "/deploy/webserver/{{ projectname }}/nginx/conf:/etc/nginx/conf.d"
+          - "/deploy/webserver/{{ projectname }}/html:/usr/share/nginx/html"
+        networks:
+          - name: "{{ projectname }}_intern_network"
+          - name: bridge
+
+    - name: Start phpMyAdmin Docker container
+      community.docker.docker_container:
+        name: "{{ projectname }}_phpmyadmin_container"
+        image: phpmyadmin/phpmyadmin
+        recreate: true
+        ports:
+          - "{{ phpmyadminport }}:80"
+        env:
+          PMA_HOST: "{{ projectname }}_mysql_container"
+          PMA_USER: "{{ mysql_user }}"
+          PMA_PASSWORD: "{{ mysql_password }}"
+        networks:
+          - name: "{{ projectname }}_intern_network"
+          - name: bridge
+
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+    - name: Restart php-fpm
+      service:
+        name: php7.4-fpm
+        state: restarted
