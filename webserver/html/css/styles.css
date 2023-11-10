@@ -1,0 +1,210 @@
+body, html {
+    height: 100%; /* stellt sicher, dass der HTML- und BODY-Tag die volle Höhe einnehmen */
+    margin: 0; /* entfernt den Standard-Margin */
+    display: flex; /* aktiviert Flexbox für die Zentrierung */
+    justify-content: center; /* zentriert die Inhalte horizontal */
+    background-color: black;
+    align-items: center; /* zentriert die Inhalte vertikal */
+    /*background-image: url('bg2.jpg');
+    background-size: cover;
+    background-position: center 20%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;*/
+  }
+
+  .background-image {
+    animation: ken-burns-effect 100s ease-in-out infinite;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    background-size: 70%;
+    background-repeat: no-repeat;
+    position: fixed;
+    z-index: -1; /* Sorgt dafür, dass der Hintergrund hinter allem anderen bleibt */
+  }
+  
+  
+  .error-message {
+    color: #fff; /* weiße Schriftfarbe */
+    font-family: 'Roboto', sans-serif; /* Empfohlene Schriftart */
+    font-size: 2em; /* Schriftgröße */
+    font-weight: bold; /* Fette Schrift */
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.75); /* Stärkerer Textschatten für bessere Lesbarkeit */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    position: absolute;
+    top: 200px; /* Größerer Abstand von oben */
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+
+  .comet {
+    position: fixed;
+    width: 5px; /* Kleinere Größe des Kometen */
+    height: 5px;
+    background: white; /* Hauptfarbe des Kometen */
+    border-radius: 50%; /* Macht den Kometen kreisförmig */
+    box-shadow: 0 0 10px 5px white; /* Kleinerer, aber sichtbarerer Schweifeffekt */
+    opacity: 1; /* Startet vollständig sichtbar */
+    z-index: 1000; /* Stellt sicher, dass der Komet über anderen Elementen liegt */
+  }
+  
+  /* Brenneffekt für den Kometen */
+  @keyframes burning {
+    0%, 20% { box-shadow: 0 0 10px 5px white; opacity: 1; }
+    80%, 100% { box-shadow: 0 0 0px 0px transparent; opacity: 0; } /* Komet verbrennt und wird unsichtbar */
+  }
+  
+
+
+
+
+  #cookie-banner {
+    display: block;
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 999;
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.5); /* Stärkerer Schatten rund um das Banner */
+    border: 1px solid rgba(0, 0, 0, 0.7);
+  }
+  
+
+  
+  
+  #cookie-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  #cookie-content p {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+  }
+  
+  #cookie-content a {
+    color: #008CBA;
+    text-decoration: none;
+  }
+  
+  #cookie-buttons {
+    margin-top: 10px;
+  }
+  
+  #cookie-accept,
+  #cookie-decline {
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  #cookie-accept {
+    background-color: #008CBA;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  #cookie-decline {
+    color: #008CBA;
+    text-decoration: none;
+  }
+  
+  #cookie-decline:hover {
+    text-decoration: underline;
+  }
+  
+  #cookie-banner.accepted {
+    display: none; /* Das Div wird ausgeblendet, wenn die Cookies akzeptiert wurden */
+  }
+
+  #overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999; /* Stellen Sie sicher, dass dies unter dem Z-Index Ihres Datenschutz-Divs liegt */
+    display: none;
+  }
+  
+  
+
+
+  #datenschutz-modal {
+    display: none; /* Starten mit verstecktem Div */
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    border-radius: 5px;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 0px 20px 5px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    width: 50%; /* Breite des Divs */
+    box-sizing: border-box;
+  }
+  
+  #datenschutz-content {
+    position: relative;
+    font-family: 'Roboto', sans-serif; /* Modern, von Google Fonts */
+  }
+
+  #datenschutz-content p {
+    font-size: 12px;
+  }
+  
+  #datenschutz-content a {
+    color: white; /* oder jede helle Farbe nach Wahl */
+    text-decoration: none; /* entfernt die Unterstreichung */
+    font-weight: bold; /* macht die Schrift fett */
+  }
+  
+  
+  #datenschutz-close {
+    position: absolute;
+    top: 0px;
+    right: 15px;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+  }
+  
+
+  @keyframes ken-burns-effect {
+    0% {
+      transform: scale(1);
+      background-position: center 30%;
+    }
+    25% {
+      transform: scale(1.2);
+      background-position: center 20%;
+    }
+    50% {
+      transform: scale(1.4);
+      background-position: center 10%;
+    }
+    75% {
+      transform: scale(1.2);
+      background-position: center 31%;
+    }
+    100% {
+      transform: scale(1);
+      background-position: center 30%;
+    }
+  }

@@ -1,0 +1,33 @@
+- hosts: webserver
+  become: yes
+  tasks:
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        update_cache: yes
+
+    - name: Ensure Docker SDK for Python is installed
+      pip:
+        name: docker
+        executable: pip3
+
+    - name: Copy HTML files to remote server
+      ansible.builtin.copy:
+        src: ./html/
+        dest: /ansi-deploy/webserver/html/
+        mode: '0644'
+
+    - name: Pull the latest Docker image for the webserver
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+
+    - name: Start Docker container with webserver
+      community.docker.docker_container:
+        name: my_webserver
+        image: nginx
+        state: started
+        ports:
+          - "1399:80"
+        volumes:
+          - /ansi-deploy/webserver/html/:/usr/share/nginx/html:ro

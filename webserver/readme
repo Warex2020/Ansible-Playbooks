@@ -1,0 +1,3 @@
+RUN
+
+ansible-playbook -i hosts.ini deploy_webserver.yml --ask-become-pass
