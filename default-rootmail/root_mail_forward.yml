@@ -1,0 +1,19 @@
+---
+- name: Configure root email forwarding
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Set up email forwarding for root
+      blockinfile:
+        path: /etc/aliases
+        block: |
+          # Ansible managed: root email forwarding
+          root: admin@example.de
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        create: yes
+      notify: update aliases
+
+  handlers:
+    - name: update aliases
+      command: newaliases

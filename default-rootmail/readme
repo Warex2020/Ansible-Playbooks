@@ -1,0 +1,1 @@
+ansible-playbook root_mail_forward.yml -i hosts.ini --ask-become-pass

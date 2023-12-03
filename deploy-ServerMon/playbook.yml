@@ -1,0 +1,42 @@
+---
+- name: Deploy checkSys.sh script and set up monthly cron job
+  hosts: all
+  become: yes
+  vars_files:
+    - secrets.yml
+
+  tasks:
+    - name: Copy checkSys.sh script to server
+      copy:
+        src: checkSys.sh
+        dest: /usr/local/bin/checkSys.sh
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure cron is installed (Debian/Ubuntu)
+      apt:
+        name: cron
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure cron is installed (RedHat/CentOS)
+      yum:
+        name: cronie
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Set up monthly cron job for checkSys.sh
+      cron:
+        name: "Monthly checkSys script"
+        user: root
+        job: "EMAIL_FROM='{{ email_from }}' EMAIL_TO='{{ email_to }}' /usr/local/bin/checkSys.sh > /dev/null 2>&1"
+        special_time: monthly
+
+    - name: Run checkSys.sh script once in the background
+      command: nohup /usr/local/bin/checkSys.sh > /dev/null 2>&1 &
+      environment:
+        EMAIL_FROM: "{{ email_from }}"
+        EMAIL_TO: "{{ email_to }}"
+      async: 10
+      poll: 0

@@ -1,0 +1,11 @@
+# create secrets.yml
+
+#run -> 
+ansible-vault create secrets.yml
+
+#add vars to secrets.yml
+email_from: "server-monitor@example.de"
+email_to: "admin@example.de"
+
+# run ansible-playbook
+ansible-playbook playbook.yml --ask-vault-pass -i hosts.ini
