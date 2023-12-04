@@ -1,0 +1,24 @@
+---
+- name: Setup WireGuard Connection Monitoring
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Copy wireguard_connection.sh to /usr/bin/
+      copy:
+        src: wireguard_connection.sh
+        dest: /usr/bin/wireguard_connection.sh
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Set up cron job for WireGuard connection monitoring
+      cron:
+        name: "Check WireGuard connection"
+        user: root
+        job: "/bin/sh /usr/bin/wireguard_connection.sh > /dev/null 2>&1"
+        minute: "*"
+        hour: "*"
+        day: "*"
+        month: "*"
+        weekday: "*"

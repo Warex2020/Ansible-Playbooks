@@ -1,0 +1,44 @@
+---
+- name: Deploy SSH Login Notification Script
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Append SSH login notification script to /etc/profile
+      blockinfile:
+        path: /etc/profile
+        block: |
+          if [ -n "$SSH_CLIENT" ]; then
+              CLIENT_IP=$(echo $SSH_CLIENT | awk '{print $1}')
+              CLIENT_PORT=$(echo $SSH_CLIENT | awk '{print $3}')
+              CLIENT_HOSTNAME=$(getent hosts $CLIENT_IP | awk '{print $2}') # May not always resolve
+              LOGIN_SHELL=$SHELL
+              SSH_CONNECTION_INFO=$(echo $SSH_CONNECTION | awk '{print "Client IP: " $1 "<br>Client Port: " $2 "<br>Server IP: " $3 "<br>Server Port: " $4}')
+
+              # Filter out logins from the 10.66.66.0/24 network
+              if [[ ! $CLIENT_IP =~ ^1\.66\.66\. ]]; then
+                  TEXT="<html><body>"
+                  TEXT="${TEXT}<h2>New SSH login @ $(hostname -f)</h2>"
+                  TEXT="${TEXT}<p>$(date): SSH login to ${USER}@$(hostname -f) from $CLIENT_IP"
+                  [ -n "$CLIENT_HOSTNAME" ] && TEXT="$TEXT (hostname: $CLIENT_HOSTNAME)"
+                  TEXT="$TEXT, port $CLIENT_PORT using shell $LOGIN_SHELL</p>"
+                  TEXT="${TEXT}<h3>Connection Details:</h3>"
+                  TEXT="${TEXT}<table style='border-collapse: collapse; border: 1px solid black;'><tr><th style='border: 1px solid black; padding: 2px;'>Detail</th><th style='border: 1px solid black; padding: 2px;'>Value</th></tr>"
+                  TEXT="${TEXT}<tr><td style='border: 1px solid black; padding: 2px;'>Client IP</td><td style='border: 1px solid black; padding: 2px;'>$CLIENT_IP</td></tr>"
+                  TEXT="${TEXT}<tr><td style='border: 1px solid black; padding: 2px;'>Client Port</td><td style='border: 1px solid black; padding: 2px;'>$CLIENT_PORT</td></tr>"
+                  TEXT="${TEXT}<tr><td style='border: 1px solid black; padding: 2px;'>Client Hostname</td><td style='border: 1px solid black; padding: 2px;'>$CLIENT_HOSTNAME</td></tr>"
+                  TEXT="${TEXT}<tr><td style='border: 1px solid black; padding: 2px;'>Login Shell</td><td style='border: 1px solid black; padding: 2px;'>$LOGIN_SHELL</td></tr>"
+                  TEXT="${TEXT}<tr><td style='border: 1px solid black; padding: 2px;'>SSH Connection Info</td><td style='border: 1px solid black; padding: 2px;'>$SSH_CONNECTION_INFO</td></tr>"
+                  TEXT="${TEXT}</table></body></html>"
+                  echo "From: logins@junix.de" > /tmp/mail.html
+                  echo "To: logins@junix.de" >> /tmp/mail.html
+                  echo "Subject: New SSH login @ $(hostname -f)" >> /tmp/mail.html
+                  echo "Content-Type: text/html" >> /tmp/mail.html
+                  echo "" >> /tmp/mail.html
+                  echo "$TEXT" >> /tmp/mail.html
+                  sendmail -t < /tmp/mail.html
+              fi
+          fi
+
+
+        marker: "# {mark} ANSIBLE MANAGED BLOCK SSH LOGIN NOTIFICATION"
