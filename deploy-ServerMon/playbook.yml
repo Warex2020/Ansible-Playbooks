@@ -34,9 +34,7 @@
         special_time: monthly
 
     - name: Run checkSys.sh script once in the background
-      command: nohup /usr/local/bin/checkSys.sh > /dev/null 2>&1 &
+      command: /usr/local/bin/checkSys.sh
       environment:
         EMAIL_FROM: "{{ email_from }}"
         EMAIL_TO: "{{ email_to }}"
-      async: 10
-      poll: 0
