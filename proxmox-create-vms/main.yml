@@ -1,0 +1,86 @@
+---
+- name: Erstellen und Konfigurieren von VMs auf Proxmox
+  hosts: proxmox
+  remote_user: root
+  become: yes
+  vars_files:
+    - vm_config.yml
+    - secrets.yml
+
+  tasks:
+    - name: Füge Proxmox Public Key hinzu
+      apt_key:
+        url: http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg
+        state: present
+
+    - name: Kommentiere Proxmox Enterprise Repository aus
+      lineinfile:
+        path: /etc/apt/sources.list.d/pve-enterprise.list
+        regexp: '^deb'
+        line: '# deb'
+        state: present
+      when: ansible_distribution_release == "buster"
+
+    - name: Aktualisiere APT Cache nach Repository-Änderungen
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Installiere pip3
+      apt:
+        name: python3-pip
+        update_cache: yes
+        state: present
+
+    - name: Installiere das Paket python3-venv
+      apt:
+        name: python3-venv
+        update_cache: yes
+
+    - name: Stelle sicher, dass 'proxmoxer' installiert ist
+      pip:
+        name: proxmoxer
+        executable: pip3
+
+    - name: VMs erstellen
+      proxmox_kvm:
+        api_user: root@pam
+        api_password: "{{ proxmox_root_password }}"
+        api_host: 192.168.178.61
+        node: dein_proxmox_node
+        vmid: "{{ vm_ids[item] }}"
+        name: "{{ vm_config[item].hostname }}"
+        ostype: l26
+        memory: 2048
+        cores: 2
+        net: '{"net0":"virtio,bridge=vmbr0"}'
+        virtio:
+          virtio0: "local-lvm:vm-{{ vm_ids[item] }}-disk-0,size=8G"
+        state: present
+      loop: "{{ vm_config.keys() }}"
+      delegate_to: 192.168.178.61
+
+    - name: Warte auf die VMs, um online zu gehen
+      wait_for_connection:
+        delay: 10
+        timeout: 300
+      loop: "{{ vm_config.keys() }}"
+      delegate_to: "{{ vm_config[item].ip }}"
+    
+    - name: User anlegen und konfigurieren
+      include_tasks: user_setup.yml
+      loop: "{{ vm_config.keys() }}"
+      loop_control:
+        loop_var: vm_name
+
+    - name: Gewähre den Usern Root-Rechte
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^{{ item.user }}'
+        line: '{{ item.user }} ALL=(ALL) NOPASSWD:ALL'
+      loop:
+        - { user: 'warex' }
+        - { user: 'ansible' }
+      delegate_to: "{{ vm_config[vm_name].ip }}"
+      loop: "{{ vm_config.keys() }}"

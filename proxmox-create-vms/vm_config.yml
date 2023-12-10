@@ -1,0 +1,27 @@
+vm_ids:
+  Debian: 100
+  Ubuntu: 101
+  RedHat: 102
+
+vm_config:
+  Debian:
+    hostname: "debian-vm"
+    ip: "192.168.178.101"
+    dns: "8.8.8.8"
+    users:
+      - name: "warex"
+      - name: "ansible"
+  Ubuntu:
+    hostname: "ubuntu-vm"
+    ip: "192.168.178.102"
+    dns: "8.8.4.4"
+    users:
+      - name: "warex"
+      - name: "ansible"
+  RedHat:
+    hostname: "redhat-vm"
+    ip: "192.168.178.103"
+    dns: "1.1.1.1"
+    users:
+      - name: "warex"
+      - name: "ansible"

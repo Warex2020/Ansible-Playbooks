@@ -1,0 +1,81 @@
+---
+- name: Installiere Froxlor auf Ubuntu Docker Container
+  hosts: 10.66.66.5
+  become: yes
+  collections:
+    - community.docker
+  tasks:
+    - name: Erstelle Ubuntu Docker Container mit Portumleitungen
+      docker_container:
+        name: ubuntu_container
+        image: ubuntu:latest
+        state: started
+        published_ports:
+          - "1422:22"
+          - "1480:80"
+        command: sleep 1d
+
+    - name: Setze DNS auf 8.8.8.8 im Container
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: bash -c "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+
+
+    - name: Setze Root-Passwort auf 'Docker!'
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: bash -c "echo 'root:Docker!' | chpasswd" 
+
+    - name: Führe Apt-Update in Debian Container aus
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt-get update 
+
+    - name: Installiere Froxlor Voraussetzungen
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt-get -y install apt-transport-https lsb-release ca-certificates curl gnupg
+
+    - name: org-froxlor.gpg
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: curl -sSLo /usr/share/keyrings/deb.froxlor.org-froxlor.gpg https://deb.froxlor.org/froxlor.gpg
+
+    - name: Füge Froxlor Repository hinzu
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: sh -c 'echo "deb [signed-by=/usr/share/keyrings/deb.froxlor.org-froxlor.gpg] https://deb.froxlor.org/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/froxlor.list'
+
+    - name: apt-get update
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt-get update 
+
+    - name: apt-get upgrade
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt-get upgrade -y
+
+    - name: apt install systemctl 
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt install systemctl 
+
+    - name: Installiere Froxlor ohne interaktive Abfragen
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y froxlor"
+
+    - name: Installiere sshd
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: apt-get install -y sshd
+
+    - name: enable sshd
+      community.docker.docker_container_exec:
+        container: ubuntu_container
+        command: systemctl enable sshd
+
+        
+
+

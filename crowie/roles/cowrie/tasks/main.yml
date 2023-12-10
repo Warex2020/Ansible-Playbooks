@@ -1,0 +1,8 @@
+- name: Deploy Cowrie Honeypot Docker Container
+  docker_container:
+    name: cowrie
+    image: cowrie/cowrie
+    state: started
+    restart_policy: always
+    published_ports:
+      - "2222:2222"

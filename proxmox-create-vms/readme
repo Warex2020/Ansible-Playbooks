@@ -1,0 +1,2 @@
+ansible-vault create secrets.yml
+ansible-playbook main.yml --ask-vault-pass

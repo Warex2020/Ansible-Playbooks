@@ -1,0 +1,4 @@
+- hosts: 10.66.66.5
+  become: true
+  roles:
+    - cowrie

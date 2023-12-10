@@ -1,0 +1,30 @@
+---
+- name: Docker Containers Info
+  hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Liste aller Docker Container IDs
+      shell: "docker ps -aq"
+      register: docker_container_ids
+
+    - name: Inspektion aller Docker Container
+      shell: "docker inspect {{ item }}"
+      with_items: "{{ docker_container_ids.stdout_lines }}"
+      register: docker_inspect_results
+
+    - name: Speichern der Container-Informationen als JSON
+      copy:
+        content: "{{ docker_inspect_results.results | map(attribute='stdout') | list | to_nice_json }}"
+        dest: "/tmp/Docker-Containers_{{ inventory_hostname }}.json"
+
+    - name: Fetch log file from remote server
+      fetch:
+        src: "/tmp/Docker-Containers_{{ inventory_hostname }}.json"
+        dest: "./Logs/"  # Speichert die Datei im aktuellen Verzeichnis des Ansible-Clients
+        flat: yes
+
+    - name: Delete log file from remote host
+      file:
+        path: "/tmp/Docker-Containers_{{ inventory_hostname }}.json"
+        state: absent

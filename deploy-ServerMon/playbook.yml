@@ -1,5 +1,5 @@
 ---
-- name: Deploy checkSys.sh script and set up monthly cron job
+- name: Deploy checkSys.sh script, set up logwatch, and set up monthly cron job
   hosts: all
   become: yes
   vars_files:
@@ -26,6 +26,18 @@
         state: present
       when: ansible_os_family == "RedHat"
 
+    - name: Install logwatch (Debian/Ubuntu)
+      apt:
+        name: logwatch
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install logwatch (RedHat/CentOS)
+      yum:
+        name: logwatch
+        state: present
+      when: ansible_os_family == "RedHat"
+
     - name: Set up monthly cron job for checkSys.sh
       cron:
         name: "Monthly checkSys script"
@@ -38,3 +50,5 @@
       environment:
         EMAIL_FROM: "{{ email_from }}"
         EMAIL_TO: "{{ email_to }}"
+      async: 60
+      poll: 0

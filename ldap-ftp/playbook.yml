@@ -1,0 +1,58 @@
+---
+- name: Deploy LDAP, LDAP Web Interface, and LDAP-bound FTP Server
+  hosts: your_servers
+  become: yes
+  vars:
+    ldap_domain: "example.com"
+    ldap_organization: "Example Inc"
+    ldap_admin_password: "adminpassword"
+    phpldapadmin_http_port: 8080
+    ftp_port: 21
+    ftp_default_user: "testuser"
+    ftp_default_pass: "testpass"
+
+  tasks:
+  - name: Check if Docker is already installed
+    command: docker --version
+    register: docker_installed
+    ignore_errors: yes
+
+  - name: Install Docker
+    apt:
+      name: docker.io
+      state: latest
+    when: docker_installed is failed
+
+  - name: Start LDAP Container
+    docker_container:
+      name: ldap
+      image: osixia/openldap:latest
+      ports:
+        - "389:389"
+        - "636:636"
+      env:
+        LDAP_ORGANISATION: "{{ ldap_organization }}"
+        LDAP_DOMAIN: "{{ ldap_domain }}"
+        LDAP_ADMIN_PASSWORD: "{{ ldap_admin_password }}"
+
+  - name: Start LDAP Web Interface Container
+    docker_container:
+      name: phpldapadmin
+      image: osixia/phpldapadmin:latest
+      ports:
+        - "{{ phpldapadmin_http_port }}:80"
+      env:
+        PHPLDAPADMIN_LDAP_HOSTS: ldap
+
+  - name: Start FTP Container
+    docker_container:
+      name: ftp
+      image: delfer/alpine-ftp-server
+      ports:
+        - "{{ ftp_port }}:21"
+      env:
+        USERS: "{{ ftp_default_user }}|{{ ftp_default_pass }}"
+        LDAP_SERVER: ldap
+        LDAP_BASE_DN: "dc=example,dc=com"
+        LDAP_BIND_DN: "cn=admin,dc=example,dc=com"
+        LDAP_BIND_PW: "{{ ldap_admin_password }}"

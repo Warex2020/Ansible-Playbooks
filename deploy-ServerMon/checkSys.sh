@@ -14,6 +14,17 @@ check_service_status() {
     fi
 }
 
+# Logwatch-Bericht
+logwatch_report() {
+    # Stellen Sie sicher, dass logwatch installiert ist
+    if command -v logwatch &> /dev/null; then
+        echo "<h2>Logwatch Report</h2>"
+        echo "<pre>$(logwatch --output stdout --format text --range 'yesterday')</pre>"
+    else
+        echo "<p>logwatch ist nicht installiert. Bitte installieren Sie logwatch, um Systemlogberichte zu erhalten.</p>"
+    fi
+}
+
 # Überprüfung und Anzeige des iptables-Status und der Regeln
 iptables_info() {
     if iptables -L | grep -q 'Chain'; then
@@ -74,6 +85,7 @@ MESSAGE="${MESSAGE}<p>SSHD: $(check_service_status sshd)</p>"
 MESSAGE="${MESSAGE}$(docker_stats)"
 MESSAGE="${MESSAGE}$(network_info)"
 MESSAGE="${MESSAGE}$(check_anomalies)"
+MESSAGE="${MESSAGE}$(logwatch_report)"
 MESSAGE="${MESSAGE}</body></html>"
 
 # Send the email using sendmail

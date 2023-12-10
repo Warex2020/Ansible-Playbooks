@@ -1,0 +1,31 @@
+---
+- name: Download Docker Container Volumes
+  hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Sammle Informationen über alle Docker-Container
+      community.docker.docker_container_info:
+      register: docker_info
+      delegate_to: localhost
+
+    - name: Ermittle Volumes-Pfade für Container
+      command: "docker inspect {{ item.Names[0] }} --format '{{ range .Mounts }}{{ .Source }}:{{ .Destination }}{{ end }}'"
+      register: volume_paths
+      delegate_to: "{{ inventory_hostname }}"
+      loop: "{{ docker_info.containers }}"
+      when: item.Mounts | length > 0
+
+    - name: Kopiere das Volume-Verzeichnis auf den lokalen Host
+      synchronize:
+        src: "{{ (volume_paths.results[item_idx].stdout.split(':'))[0] }}/"
+        dest: "/pfad/zu/deinem/lokalen/verzeichnis/{{ inventory_hostname }}/{{ docker_info.containers[item_idx].Names[0] }}{{ (volume_paths.results[item_idx].stdout.split(':'))[1] }}"
+        mode: pull
+        rsync_opts:
+          - "--no-perms"
+          - "--omit-dir-times"
+          - "--recursive"
+      loop: "{{ range(0, docker_info.containers | length) | list }}"
+      when: docker_info.containers[item_idx].Mounts | length > 0
+      vars:
+        item_idx: "{{ loop.index0 }}"

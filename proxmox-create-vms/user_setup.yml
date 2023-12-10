@@ -1,0 +1,16 @@
+- name: User '{{ user.name }}' anlegen
+  user:
+    name: "{{ user.name }}"
+    password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters,digits') }}"
+    update_password: on_create
+  loop: "{{ vm_config[vm_name].users }}"
+  loop_control:
+    loop_var: user
+  delegate_to: "{{ vm_config[vm_name].ip }}"
+
+- name: Public Key zum User 'warex' hinzufügen
+  authorized_key:
+    user: warex
+    state: present
+    key: "{{ lookup('file', './id_rsa.pub') }}"
+  delegate_to: "{{ vm_config[vm_name].ip }}"
