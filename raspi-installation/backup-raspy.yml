@@ -1,0 +1,30 @@
+---
+- name: Backup Raspi-Confs to NAS
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Installiere mailutils
+      apt:
+        name: mailutils
+        state: present
+
+
+    - name: Kopiere Backup-Skripts
+      ansible.builtin.copy:
+        src: ./backup-raspy/
+        dest: /usr/bin/backup-raspy/
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Set up cron job for Raspi-Backup
+      cron:
+        name: "Raspi-Backup"
+        user: root
+        job: "bash /usr/bin/backup-raspy/backup3.sh"
+        minute: "30"
+        hour: "12"
+        day: "*"
+        month: "*"
+        weekday: "3"
