@@ -1,0 +1,45 @@
+---
+- name: Konfigurieren des Raspberry Pi
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Update aller Pakete
+      apt:
+        update_cache: yes
+        upgrade: full
+
+    - name: Unattended-Upgrades installieren
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Unattended-Upgrades konfigurieren
+      copy:
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+          APT::Periodic::Unattended-Upgrade "1";
+
+    - name: Docker installieren
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Docker installieren
+      apt:
+        name: docker-compose
+        state: present        
+
+    - name: Docker-Service starten und aktivieren
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Wireguard installieren
+      apt:
+        name: wireguard
+        state: present

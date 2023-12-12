@@ -1,0 +1,32 @@
+---
+- name: Wireguard Konfiguration und Netzwerktest
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Kopiere Wireguard-Konfigurationsdateien
+      ansible.builtin.copy:
+        src: ./etc/wireguard/
+        dest: /etc/wireguard/
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Stelle sicher, dass 'resolvconf' installiert ist
+      apt:
+        name: resolvconf
+        state: present
+
+
+    - name: Neustart Wireguard
+      ansible.builtin.systemd:
+        name: wg-quick@wg0
+        state: restarted
+
+    - name: Führe Ping-Test auf 10.66.66.1 aus
+      ansible.builtin.command: ping -c 4 10.66.66.1
+      register: ping_result
+
+    - name: Zeige Ping-Ergebnisse an
+      ansible.builtin.debug:
+        msg: "{{ ping_result.stdout_lines }}"

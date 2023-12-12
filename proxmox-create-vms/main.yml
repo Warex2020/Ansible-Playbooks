@@ -37,17 +37,18 @@
         name: python3-venv
         update_cache: yes
 
-    - name: Stelle sicher, dass 'proxmoxer' installiert ist
-      pip:
-        name: proxmoxer
-        executable: pip3
+    - name: Installiere das Paket python3-proxmoxer
+      apt:
+        name: python3-proxmoxer
+        update_cache: yes
+
 
     - name: VMs erstellen
       proxmox_kvm:
         api_user: root@pam
         api_password: "{{ proxmox_root_password }}"
         api_host: 192.168.178.61
-        node: dein_proxmox_node
+        node: proxmox
         vmid: "{{ vm_ids[item] }}"
         name: "{{ vm_config[item].hostname }}"
         ostype: l26

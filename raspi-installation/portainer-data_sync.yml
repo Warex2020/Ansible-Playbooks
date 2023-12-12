@@ -1,0 +1,34 @@
+---
+- name: Bidirektionale Synchronisation des Portainer Ordners
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Sichere Zielverzeichnis /srv/portainer, falls nicht vorhanden
+      ansible.builtin.file:
+        path: /srv/portainer
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Synchronisiere von Client zu Raspberry Pi
+      ansible.builtin.synchronize:
+        src: ./portainer/
+        dest: /srv/portainer/
+        recursive: yes
+        delete: no
+        checksum: yes
+        rsync_opts:
+          - "--update"
+
+    - name: Synchronisiere von Raspberry Pi zu Client
+      ansible.builtin.synchronize:
+        src: /srv/portainer/
+        dest: ./portainer/
+        recursive: yes
+        delete: no
+        checksum: yes
+        rsync_opts:
+          - "--update"
+        mode: pull

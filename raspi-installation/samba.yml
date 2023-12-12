@@ -1,0 +1,50 @@
+---
+- name: SMB Server mit Benutzergruppe auf Raspberry Pi installieren und konfigurieren
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Samba installieren
+      apt:
+        name: samba
+        state: present
+
+    - name: Gruppe 'smbgroup' erstellen
+      group:
+        name: smbgroup
+
+    - name: Stelle sicher, dass Benutzer 'warex' zur Gruppe 'smbgroup' hinzugefügt wird
+      ansible.builtin.user:
+        name: warex
+        groups: smbgroup
+        append: yes
+
+    - name: SMB-Verzeichnis erstellen
+      file:
+        path: /smb
+        state: directory
+        owner: root
+        group: smbgroup
+        mode: '0770'
+
+    - name: Samba-Konfigurationsdatei sichern
+      command: cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
+
+    - name: Samba-Konfiguration einrichten
+      blockinfile:
+        path: /etc/samba/smb.conf
+        block: |
+          [smb]
+          path = /smb
+          browseable = yes
+          writeable = yes
+          create mask = 0770
+          directory mask = 0770
+          valid users = @smbgroup
+          public = no
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+    - name: Samba neu starten
+      service:
+        name: smbd
+        state: restarted

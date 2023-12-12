@@ -1,2 +1,2 @@
 ansible-vault create secrets.yml
-ansible-playbook main.yml --ask-vault-pass
+ansible-playbook main.yml --ask-vault-pass -i hosts.ini 

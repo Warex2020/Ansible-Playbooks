@@ -1,0 +1,40 @@
+---
+- name: Installiere und konfiguriere Postfix
+  hosts: raspberrypi
+  become: yes
+
+  tasks:
+    - name: Installiere Postfix
+      apt:
+        name: postfix
+        state: present
+
+    - name: Sichere existierende Postfix-Konfigurationsdateien
+      ansible.builtin.copy:
+        src: "/etc/postfix/{{ item }}"
+        dest: "/etc/postfix/{{ item }}.backup"
+        remote_src: yes
+      with_items:
+        - main.cf
+        - master.cf
+        - sasl_passwd.db
+        - sender_canonical
+      ignore_errors: yes
+
+    - name: Kopiere Postfix-Konfigurationsdateien vom Client
+      ansible.builtin.copy:
+        src: "./etc/postfix/{{ item }}"
+        dest: "/etc/postfix/{{ item }}"
+        owner: root
+        group: root
+        mode: "{{ '0600' if item in ['sasl_passwd.db'] else '0644' }}"
+      with_items:
+        - main.cf
+        - master.cf
+        - sasl_passwd.db
+        - sender_canonical
+
+    - name: Starte Postfix neu
+      ansible.builtin.service:
+        name: postfix
+        state: restarted
